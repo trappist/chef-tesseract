@@ -36,6 +36,7 @@ bash "compile_leptonica_source" do
     make && make install
   EOH
   not_if { ::File.exists?("/usr/local/lib/liblept.so") }
+  not_if { ::File.directory?("/usr/local/include/leptonica/") }
 end
 
 remote_file "#{Chef::Config[:file_cache_path]}/tesseract.tar.gz" do
