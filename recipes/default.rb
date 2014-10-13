@@ -70,5 +70,5 @@ bash "install_tesseract_english_language_pack" do
     cd tesseract-ocr
     cp -rf tessdata /usr/local/share
   EOH
-  not_if { ::File.directory?("/usr/local/share/tessdata") }
+  not_if { ::File.exists?("/usr/local/share/tessdata/eng.traineddata") }
 end
