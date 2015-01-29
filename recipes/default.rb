@@ -65,16 +65,21 @@ execute "ldconfig" do
   command "/sbin/ldconfig"
 end
 
-remote_file "#{Chef::Config[:file_cache_path]}/tesseract.eng.tar.gz" do
-  source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.eng.tar.gz"
-end
+node['tesseract']['dictionaries'] ||= ["eng"]
 
-bash "install_tesseract_english_language_pack" do
-  cwd Chef::Config[:file_cache_path]
-  code <<-EOH
-    tar zxf tesseract.eng.tar.gz
-    cd tesseract-ocr
-    cp -rf tessdata /usr/local/share
-  EOH
-  not_if { ::File.exists?("/usr/local/share/tessdata/eng.traineddata") }
+for lang in node['tesseract']['dictionaries']
+  remote_file "#{Chef::Config[:file_cache_path]}/tesseract.#{lang}.tar.gz" do
+    source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.#{lang}.tar.gz"
+  end
+
+
+  bash "install_tesseract_#{lang}_language_pack" do
+    cwd Chef::Config[:file_cache_path]
+    code <<-EOH
+      tar zxf tesseract.#{lang}.tar.gz
+      cd tesseract-ocr
+      cp -rf tessdata /usr/local/share
+    EOH
+    not_if { ::File.exists?("/usr/local/share/tessdata/#{lang}.traineddata") }
+  end
 end
