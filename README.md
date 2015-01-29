@@ -9,6 +9,7 @@ No requirement.
 Attributes
 ----------
 * `node['tesseract']['version']` - Version number.
+* `node['tesseract']['dictionaries']` - Array with all custom dictionaries. Default: ["eng"]
 
 Usage
 -----
