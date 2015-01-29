@@ -16,8 +16,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+case node["platform"]
+when "debian", "ubuntu"
+  packages = %w(libtiff-dev libpng-dev libjpeg-dev autoconf libtool)
+else
+  packages = %w(libtiff-devel libpng-devel libjpeg-devel autoconf libtool)
+end
 
-%w(libtiff-devel libpng-devel libjpeg-devel autoconf libtool).each do |pkg|
+packages.each do |pkg|
   package pkg do
     action :install
   end
