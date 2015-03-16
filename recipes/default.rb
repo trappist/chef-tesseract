@@ -66,7 +66,7 @@ execute "ldconfig" do
 end
 
 node.default['tesseract'] ||= {}
-node['tesseract'].default['dictionaries'] ||= ["eng"]
+node.default['tesseract']['dictionaries'] ||= ["eng"]
 
 for lang in node['tesseract']['dictionaries']
   remote_file "#{Chef::Config[:file_cache_path]}/tesseract.#{lang}.tar.gz" do
