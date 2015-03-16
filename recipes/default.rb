@@ -18,7 +18,10 @@
 #
 case node["platform"]
 when "debian", "ubuntu"
-  packages = %w(libtiff-dev libpng-dev libjpeg-dev autoconf libtool)
+  packages = %w(libtiff-dev libpng-dev libjpeg-dev autoconf libtool tesseract-ocr)
+  packages += %w(eng ara bel ben bul ces dan deu ell fin fra heb hin ind isl ita jpn kor nld nor pol por ron rus spa swe tha tur ukr).map do |lang|
+    "tesseract-ocr-#{lang}"
+  end
 else
   packages = %w(libtiff-devel libpng-devel libjpeg-devel autoconf libtool)
 end
@@ -29,58 +32,61 @@ packages.each do |pkg|
   end
 end
 
-remote_file "#{Chef::Config[:file_cache_path]}/leptonica.tar.gz" do
-  source "https://leptonica.googlecode.com/files/leptonica-1.69.tar.gz"
-end
+unless packages.include?('tesseract-ocr')
 
-bash "compile_leptonica_source" do
-  cwd Chef::Config[:file_cache_path]
-  code <<-EOH
-    tar zxf leptonica.tar.gz
-    cd leptonica-1.69
-    ./configure
-    make && make install
-  EOH
-  not_if { ::File.exists?("/usr/local/lib/liblept.so") }
-  not_if { ::File.directory?("/usr/local/include/leptonica/") }
-end
-
-remote_file "#{Chef::Config[:file_cache_path]}/tesseract.tar.gz" do
-  source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.02.tar.gz"
-end
-
-bash "compile_tesseract_source" do
-  cwd Chef::Config[:file_cache_path]
-  code <<-EOH
-    tar zxf tesseract.tar.gz
-    cd tesseract-ocr
-    ./autogen.sh
-    ./configure
-    make && make install
-  EOH
-  not_if { ::File.exists?("/usr/local/bin/tesseract") }
-end
-
-execute "ldconfig" do
-  command "/sbin/ldconfig"
-end
-
-node.default['tesseract'] ||= {}
-node.default['tesseract']['dictionaries'] ||= ["eng"]
-
-for lang in node['tesseract']['dictionaries']
-  remote_file "#{Chef::Config[:file_cache_path]}/tesseract.#{lang}.tar.gz" do
-    source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.#{lang}.tar.gz"
+  remote_file "#{Chef::Config[:file_cache_path]}/leptonica.tar.gz" do
+    source "https://leptonica.googlecode.com/files/leptonica-1.69.tar.gz"
   end
 
-
-  bash "install_tesseract_#{lang}_language_pack" do
+  bash "compile_leptonica_source" do
     cwd Chef::Config[:file_cache_path]
     code <<-EOH
-      tar zxf tesseract.#{lang}.tar.gz
-      cd tesseract-ocr
-      cp -rf tessdata /usr/local/share
+      tar zxf leptonica.tar.gz
+      cd leptonica-1.69
+      ./configure
+      make && make install
     EOH
-    not_if { ::File.exists?("/usr/local/share/tessdata/#{lang}.traineddata") }
+    not_if { ::File.exists?("/usr/local/lib/liblept.so") }
+    not_if { ::File.directory?("/usr/local/include/leptonica/") }
   end
+
+  remote_file "#{Chef::Config[:file_cache_path]}/tesseract.tar.gz" do
+    source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.02.tar.gz"
+  end
+
+  bash "compile_tesseract_source" do
+    cwd Chef::Config[:file_cache_path]
+    code <<-EOH
+      tar zxf tesseract.tar.gz
+      cd tesseract-ocr
+      ./autogen.sh
+      ./configure
+      make && make install
+    EOH
+    not_if { ::File.exists?("/usr/local/bin/tesseract") }
+  end
+
+  execute "ldconfig" do
+    command "/sbin/ldconfig"
+  end
+
+  node.default['tesseract']['dictionaries'] ||= ["eng"]
+
+  for lang in node['tesseract']['dictionaries']
+    remote_file "#{Chef::Config[:file_cache_path]}/tesseract.#{lang}.tar.gz" do
+      source "https://tesseract-ocr.googlecode.com/files/tesseract-ocr-3.02.#{lang}.tar.gz"
+    end
+
+
+    bash "install_tesseract_#{lang}_language_pack" do
+      cwd Chef::Config[:file_cache_path]
+      code <<-EOH
+        tar zxf tesseract.#{lang}.tar.gz
+        cd tesseract-ocr
+        cp -rf tessdata /usr/local/share
+      EOH
+      not_if { ::File.exists?("/usr/local/share/tessdata/#{lang}.traineddata") }
+    end
+  end
+
 end
