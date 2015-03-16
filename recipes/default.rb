@@ -65,6 +65,7 @@ execute "ldconfig" do
   command "/sbin/ldconfig"
 end
 
+node['tesseract'] ||= {}
 node['tesseract']['dictionaries'] ||= ["eng"]
 
 for lang in node['tesseract']['dictionaries']
